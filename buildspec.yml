@@ -5,7 +5,7 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - cd src 
-      - echo "Current directory: $(pwd)"
+      - echo "Current directory:$(pwd)"
       - echo "Files in src directory:"
       - ls -la
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
