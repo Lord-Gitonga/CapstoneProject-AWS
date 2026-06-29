@@ -9,3 +9,12 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`App running on port ${port}`);
 });
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});

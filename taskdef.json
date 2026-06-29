@@ -4,7 +4,7 @@
   "containerDefinitions": [
     {
       "name": "myapp-container",
-      "image": "<REPOSITORY_URI>:latest",
+      "image": "422653419447.dkr.ecr.eu-north-1.amazonaws.com/myapp-repo:latest",
       "portMappings": [
         {
           "containerPort": 3000,
@@ -17,5 +17,5 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "arn:aws:iam::<account_id>:role/ecsTaskExecutionRole"
+  "executionRoleArn": "arn:aws:iam::422653419447:role/RoleForECS"
 }
