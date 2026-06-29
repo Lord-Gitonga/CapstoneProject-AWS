@@ -1,13 +1,6 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      nodejs: 20
-    commands:
-      - echo Installing dependencies...
-      - npm install
-
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
@@ -32,7 +25,6 @@ phases:
       - echo Build completed on `date`
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
-
 
 artifacts:
   files:
