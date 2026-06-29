@@ -1,0 +1,24 @@
+# Dependencies
+node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+
+# Environment variables
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Docker files that don't need to be copied
+.dockerignore
