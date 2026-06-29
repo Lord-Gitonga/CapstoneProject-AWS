@@ -1,9 +1,20 @@
-FROM node:16
+# Use the official Node.js LTS image
+FROM node:20-alpine
 
-WORKDIR /usr/src/app
-COPY package*.json ./
+# Set the working directory
+WORKDIR /app
+
+# Copy package files first
+COPY src/package*.json ./
+
+# Install dependencies
 RUN npm install
 
-COPY . .
+# Copy the rest of the application
+COPY src/ .
+
+# Expose the application's port
 EXPOSE 3000
+
+# Start the application
 CMD ["npm", "start"]
