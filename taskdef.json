@@ -1,21 +1,30 @@
 {
-  "family": "myapp-task",
-  "networkMode": "awsvpc",
-  "containerDefinitions": [
-    {
-      "name": "myapp-container",
-      "image": "422653419447.dkr.ecr.eu-north-1.amazonaws.com/myapp-repo:latest",
-      "portMappings": [
+    "family": "myapp-task-production",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "1024",
+    "memory": "3072",
+    "executionRoleArn": "arn:aws:iam::422653419447:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::422653419447:role/ecsTaskRole",
+    "containerDefinitions": [
         {
-          "containerPort": 3000,
-          "protocol": "tcp"
+            "name": "myapp",
+            "image": "<IMAGE1_NAME>",
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/myapp-task-production",
+                    "awslogs-region": "eu-north-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
         }
-      ],
-      "essential": true
-    }
-  ],
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "256",
-  "memory": "512",
-  "executionRoleArn": "arn:aws:iam::422653419447:role/RoleForECS"
+    ]
 }
