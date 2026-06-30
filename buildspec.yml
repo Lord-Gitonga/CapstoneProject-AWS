@@ -19,11 +19,63 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Creating imageDetail.json"
       - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
-      - echo "Using existing appspec.yml from repository"
+      - echo "Creating clean appspec.yml"
+      - |
+        cat > appspec.yml << 'EOF'
+        version: 0.0
+        Resources:
+        - TargetService:
+            Type: AWS::ECS::Service
+            Properties:
+              TaskDefinition: <TASK_DEFINITION>
+              LoadBalancerInfo:
+                ContainerName: myapp
+                ContainerPort: 3000
+        EOF
+      - echo "Creating taskdef.json"
+      - |
+        cat > taskdef.json << EOF
+        {
+          "family": "myapp-task-production",
+          "networkMode": "awsvpc",
+          "requiresCompatibilities": ["FARGATE"],
+          "cpu": "1024",
+          "memory": "3072",
+          "executionRoleArn": "arn:aws:iam::422653419447:role/ecsTaskExecutionRole",
+          "taskRoleArn": "arn:aws:iam::422653419447:role/ecsTaskRole",
+          "containerDefinitions": [
+            {
+              "name": "myapp",
+              "image": "$REPOSITORY_URI:$IMAGE_TAG",
+              "portMappings": [
+                {
+                  "containerPort": 3000,
+                  "protocol": "tcp"
+                }
+              ],
+              "essential": true,
+              "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/myapp-task-production",
+                  "awslogs-region": "eu-north-1",
+                  "awslogs-stream-prefix": "ecs"
+                }
+              }
+            }
+          ]
+        }
+        EOF
+      - echo "=== VALIDATION ==="
+      - echo "AppSpec content:"
       - cat appspec.yml
-      - echo "Validating appspec.yml"
-      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml'))" && echo "Valid YAML" || echo "Invalid YAML"
+      - echo "YAML validation:"
+      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml')); print('✓ Valid YAML')" || echo "✗ Invalid YAML"
+      - echo "JSON validation:"
+      - python3 -m json.tool taskdef.json > /dev/null && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
+      - python3 -m json.tool imageDetail.json > /dev/null && echo "✓ Valid imageDetail" || echo "✗ Invalid imageDetail"
 
 artifacts:
   files:
