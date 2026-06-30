@@ -19,14 +19,74 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "=== Creating imageDetail.json ==="
       - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
-      - echo "Using existing appspec.yml from repository"
-      - cat appspec.yml
-      - echo "Validating appspec.yml"
-      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml'))" && echo "Valid YAML" || echo "Invalid YAML"
+      - echo "=== Creating appspec.yml with EXACT format ==="
+      - |
+        cat > appspec.yml << 'EOF'
+        version: 0.0
+        Resources:
+          - TargetService:
+              Type: AWS::ECS::Service
+              Properties:
+                TaskDefinition: <TASK_DEFINITION>
+                LoadBalancerInfo:
+                  ContainerName: myapp
+                  ContainerPort: 3000
+        EOF
+      - echo "=== Creating taskdef.json with updated image ==="
+      - |
+        cat > taskdef.json << EOF
+        {
+          "family": "myapp-task-production",
+          "networkMode": "awsvpc",
+          "requiresCompatibilities": ["FARGATE"],
+          "cpu": "1024",
+          "memory": "3072",
+          "executionRoleArn": "arn:aws:iam::422653419447:role/ecsTaskExecutionRole",
+          "taskRoleArn": "arn:aws:iam::422653419447:role/ecsTaskRole",
+          "containerDefinitions": [
+            {
+              "name": "myapp",
+              "image": "$REPOSITORY_URI:$IMAGE_TAG",
+              "portMappings": [
+                {
+                  "containerPort": 3000,
+                  "protocol": "tcp",
+                  "appProtocol": "http",
+                  "name": "myapp-3000-tcp"
+                }
+              ],
+              "essential": true,
+              "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/myapp-task-production",
+                  "awslogs-region": "eu-north-1",
+                  "awslogs-stream-prefix": "ecs"
+                }
+              }
+            }
+          ]
+        }
+        EOF
+      - echo "=== VALIDATION CHECKS ==="
+      - echo "1. Files created:"
+      - ls -la appspec.yml imageDetail.json taskdef.json
+      - echo "2. AppSpec content (exact format):"
+      - cat -A appspec.yml  # Shows hidden characters
+      - echo "3. YAML validation:"
+      - python3 -c "import yaml; data=yaml.safe_load(open('appspec.yml')); print('YAML Valid. Container:', data['Resources'][0]['TargetService']['Properties']['LoadBalancerInfo']['ContainerName'], 'Port:', data['Resources'][0]['TargetService']['Properties']['LoadBalancerInfo']['ContainerPort'])" || echo "YAML INVALID"
+      - echo "4. JSON validation:"
+      - python3 -m json.tool taskdef.json > /dev/null && echo "taskdef.json:Valid" || echo "taskdef.json: Invalid"
+      - python3 -m json.tool imageDetail.json > /dev/null && echo "imageDetail.json:Valid" || echo "imageDetail.json: Invalid"
+      - echo "5. File sizes (must be under 50KB total):"
+      - wc -c appspec.yml imageDetail.json taskdef.json
+      - echo "Total size:" $(( $(wc -c < appspec.yml) + $(wc -c < imageDetail.json) + $(wc -c < taskdef.json) )) "bytes"
 
 artifacts:
   files:
     - imageDetail.json
     - appspec.yml
+    - taskdef.json
   name: myapp-$(date +%Y-%m-%d)
