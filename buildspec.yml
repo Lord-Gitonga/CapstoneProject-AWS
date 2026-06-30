@@ -23,15 +23,15 @@ phases:
       - printf '[{"name":"myapp","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
       - echo Writing image detail file for CodeDeploy...
       - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
-      - echo Updating task definition...
-      - sed -i 's|<IMAGE1_NAME>|'$REPOSITORY_URI:$IMAGE_TAG'|g' taskdef.json
+      - echo Listing files in current directory...
+      - ls -la
+      - echo Content of imagedefinitions.json:
       - cat imagedefinitions.json
+      - echo Content of imageDetail.json:
       - cat imageDetail.json
 
 artifacts:
   files:
     - imagedefinitions.json
     - imageDetail.json
-    - appspec.yml
-    - taskdef.json
   name: myapp-$(date +%Y-%m-%d)
