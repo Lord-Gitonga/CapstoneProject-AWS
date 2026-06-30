@@ -19,19 +19,15 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Writing image definitions file...
-      - printf '[{"name":"myapp","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - echo Writing image detail file for CodeDeploy...
-      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
-      - echo Listing files in current directory...
+      - echo Creating imagedefinitions.json
+      - echo '[{"name":"myapp","imageUri":"'$REPOSITORY_URI:$IMAGE_TAG'"}]' > imagedefinitions.json
+      - echo Creating imageDetail.json  
+      - echo '{"ImageURI":"'$REPOSITORY_URI:$IMAGE_TAG'"}' > imageDetail.json
       - ls -la
-      - echo Content of imagedefinitions.json:
       - cat imagedefinitions.json
-      - echo Content of imageDetail.json:
       - cat imageDetail.json
 
 artifacts:
   files:
     - imagedefinitions.json
     - imageDetail.json
-  name: myapp-$(date +%Y-%m-%d)
