@@ -19,32 +19,11 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Creating imageDetail.json
       - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
-      - echo Creating appspec.yml with explicit formatting
-      - |
-        cat > appspec.yml << 'EOF'
-        version: 0.0
-        Resources:
-          - TargetService:
-              Type: AWS::ECS::Service
-              Properties:
-                TaskDefinition: <TASK_DEFINITION>
-                LoadBalancerInfo:
-                  ContainerName: "myapp"
-                  ContainerPort: 3000
-        EOF
-      - echo "=== DEBUGGING APPSPEC FILE ==="
-      - echo "File exists check:"
-      - ls -la appspec.yml
-      - echo "File content:"
+      - echo "Using existing appspec.yml from repository"
       - cat appspec.yml
-      - echo "File encoding check:"
-      - file appspec.yml
-      - echo "YAML validation:"
-      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml'))" && echo "YAML is valid" || echo "YAML is invalid"
-      - echo "Hex dump (first 200 bytes):"
-      - hexdump -C appspec.yml | head -10
+      - echo "Validating appspec.yml"
+      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml'))" && echo "Valid YAML" || echo "Invalid YAML"
 
 artifacts:
   files:
