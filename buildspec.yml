@@ -19,11 +19,11 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Creating minimal imageDetail.json
-      - echo '{"ImageURI":"'$REPOSITORY_URI:$IMAGE_TAG'"}' > imageDetail.json
-      - echo Creating minimal appspec.yml
+      - echo Creating imageDetail.json
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
+      - echo Creating appspec.yml with explicit formatting
       - |
-        cat > appspec.yml << EOF
+        cat > appspec.yml << 'EOF'
         version: 0.0
         Resources:
           - TargetService:
@@ -34,12 +34,17 @@ phases:
                   ContainerName: "myapp"
                   ContainerPort: 3000
         EOF
-      - echo "Checking file sizes:"
-      - ls -lh imageDetail.json appspec.yml
-      - echo "Total size:"
-      - du -sh imageDetail.json appspec.yml
-      - cat imageDetail.json
+      - echo "=== DEBUGGING APPSPEC FILE ==="
+      - echo "File exists check:"
+      - ls -la appspec.yml
+      - echo "File content:"
       - cat appspec.yml
+      - echo "File encoding check:"
+      - file appspec.yml
+      - echo "YAML validation:"
+      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml'))" && echo "YAML is valid" || echo "YAML is invalid"
+      - echo "Hex dump (first 200 bytes):"
+      - hexdump -C appspec.yml | head -10
 
 artifacts:
   files:
