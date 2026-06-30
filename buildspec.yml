@@ -19,14 +19,30 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Creating imagedefinitions.json
-      - echo '[{"name":"myapp","imageUri":"'$REPOSITORY_URI:$IMAGE_TAG'"}]' > imagedefinitions.json
-      - echo Creating imageDetail.json  
+      - echo Creating minimal imageDetail.json
       - echo '{"ImageURI":"'$REPOSITORY_URI:$IMAGE_TAG'"}' > imageDetail.json
-      - ls -la
-      - cat imagedefinitions.json
+      - echo Creating minimal appspec.yml
+      - |
+        cat > appspec.yml << EOF
+        version: 0.0
+        Resources:
+          - TargetService:
+              Type: AWS::ECS::Service
+              Properties:
+                TaskDefinition: <TASK_DEFINITION>
+                LoadBalancerInfo:
+                  ContainerName: "myapp"
+                  ContainerPort: 3000
+        EOF
+      - echo "Checking file sizes:"
+      - ls -lh imageDetail.json appspec.yml
+      - echo "Total size:"
+      - du -sh imageDetail.json appspec.yml
       - cat imageDetail.json
+      - cat appspec.yml
 
 artifacts:
   files:
-    - '**/*'
+    - imageDetail.json
+    - appspec.yml
+  name: myapp-$(date +%Y-%m-%d)
