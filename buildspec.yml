@@ -20,13 +20,32 @@ phases:
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
-      - echo "Using existing appspec.yml from repository"
-      - cat appspec.yml
-      - echo "Validating appspec.yml"
-      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml'))" && echo "Valid YAML" || echo "Invalid YAML"
+      - echo "Creating appspec.json (JSON format)"
+      - |
+        cat > appspec.json << EOF
+        {
+          "version": "0.0",
+          "Resources": [
+            {
+              "TargetService": {
+                "Type": "AWS::ECS::Service",
+                "Properties": {
+                  "TaskDefinition": "<TASK_DEFINITION>",
+                  "LoadBalancerInfo": {
+                    "ContainerName": "myapp",
+                    "ContainerPort": 3000
+                  }
+                }
+              }
+            }
+          ]
+        }
+        EOF
+      - cat appspec.json
+      - python3 -m json.tool appspec.json
 
 artifacts:
   files:
     - imageDetail.json
-    - appspec.yml
+    - appspec.json
   name: myapp-$(date +%Y-%m-%d)
