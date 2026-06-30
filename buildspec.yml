@@ -29,4 +29,5 @@ artifacts:
   files:
     - imageDetail.json
     - appspec.yml
+    - taskdef.json
   name: myapp-$(date +%Y-%m-%d)
