@@ -253,7 +253,7 @@ myapp:7d93ab4
 <img width="1816" height="748" alt="Screenshot From 2026-07-01 22-21-07" src="https://github.com/user-attachments/assets/4d8f8da9-2334-4543-974d-56fc3acc6fdf" />
 <img width="1822" height="395" alt="Screenshot From 2026-07-01 22-20-19" src="https://github.com/user-attachments/assets/2c6e41d6-cb75-4a1f-952d-b755a1ecfe7a" />
 <img width="1821" height="731" alt="Screenshot From 2026-07-01 22-18-10" src="https://github.com/user-attachments/assets/555ba2ec-9a4f-4312-8b91-2861bd349207" />
-<img width="1527" height="737" alt="Screenshot From 2026-07-01 14-05-44" src="https://github.com/user-attachments/assets/c84a11b7-653d-4721-a39a-557fa02912d0" />
+
 
 
 # Step 3 — Deployment Artifacts
