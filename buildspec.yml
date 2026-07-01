@@ -26,8 +26,8 @@ phases:
 
       - echo "Verifying deployment files..."
 
-      - test -f appspec.yml || (echo "ERROR: appspec.yml not found" && exit 1)
-      - test -f taskdef.json || (echo "ERROR: taskdef.json not found" && exit 1)
+      - test -f appspec.yml || (echo "ERROR:appspec.yml not found" && exit 1)
+      - test -f taskdef.json || (echo "ERROR:taskdef.json not found" && exit 1)
 
       - echo "===== AppSpec ====="
       - cat appspec.yml
