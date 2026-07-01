@@ -1,5 +1,4 @@
 version: 0.2
-
 phases:
   pre_build:
     commands:
@@ -8,78 +7,50 @@ phases:
       - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
+
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo "Creating imageDetail.json"
+
+      - echo "Generating imageDetail.json..."
       - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
-      - echo "Creating clean appspec.yml"
-      - |
-        cat > appspec.yml << 'EOF'
-        version: 0.0
-        Resources:
-        - TargetService:
-            Type: AWS::ECS::Service
-            Properties:
-              TaskDefinition: <TASK_DEFINITION>
-              LoadBalancerInfo:
-                ContainerName: myapp
-                ContainerPort: 3000
-        EOF
-      - echo "Creating taskdef.json"
-      - |
-        cat > taskdef.json << EOF
-        {
-          "family": "myapp-task-production",
-          "networkMode": "awsvpc",
-          "requiresCompatibilities": ["FARGATE"],
-          "cpu": "1024",
-          "memory": "3072",
-          "executionRoleArn": "arn:aws:iam::422653419447:role/ecsTaskExecutionRole",
-          "taskRoleArn": "arn:aws:iam::422653419447:role/ecsTaskRole",
-          "containerDefinitions": [
-            {
-              "name": "myapp",
-              "image": "$REPOSITORY_URI:$IMAGE_TAG",
-              "portMappings": [
-                {
-                  "containerPort": 3000,
-                  "protocol": "tcp"
-                }
-              ],
-              "essential": true,
-              "logConfiguration": {
-                "logDriver": "awslogs",
-                "options": {
-                  "awslogs-group": "/ecs/myapp-task-production",
-                  "awslogs-region": "eu-north-1",
-                  "awslogs-stream-prefix": "ecs"
-                }
-              }
-            }
-          ]
-        }
-        EOF
-      - echo "=== VALIDATION ==="
-      - echo "AppSpec content:"
+
+      - echo "Verifying deployment files..."
+
+      - test -f appspec.yml || (echo "ERROR: appspec.yml not found" && exit 1)
+      - test -f taskdef.json || (echo "ERROR: taskdef.json not found" && exit 1)
+
+      - echo "===== AppSpec ====="
       - cat appspec.yml
-      - echo "YAML validation:"
-      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml')); print('✓ Valid YAML')" || echo "✗ Invalid YAML"
-      - echo "JSON validation:"
-      - python3 -m json.tool taskdef.json > /dev/null && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
-      - python3 -m json.tool imageDetail.json > /dev/null && echo "✓ Valid imageDetail" || echo "✗ Invalid imageDetail"
+
+      - echo "===== Task Definition ====="
+      - cat taskdef.json
+
+      - echo "===== Image Detail ====="
+      - cat imageDetail.json
+
+      - echo "Validating AppSpec..."
+      - python3 -c "import yaml; yaml.safe_load(open('appspec.yml')); print('✓ appspec.yml is valid')"
+
+      - echo "Validating Task Definition..."
+      - python3 -m json.tool taskdef.json > /dev/null
+      - echo "✓ taskdef.json is valid"
+
+      - echo "Validating Image Detail..."
+      - python3 -m json.tool imageDetail.json > /dev/null
+      - echo "✓ imageDetail.json is valid"
 
 artifacts:
   files:
-    - imageDetail.json
     - appspec.yml
     - taskdef.json
-  name: myapp-$(date +%Y-%m-%d)
+    - imageDetail.json
